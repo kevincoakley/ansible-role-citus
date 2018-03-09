@@ -22,7 +22,11 @@
   become: yes
   become_method: sudo
 
+  vars:
+    - citus_node_variable: facter_ipaddress
+
   roles:
+    - facter
     - ansible-role-citus
 
   tags:
