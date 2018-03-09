@@ -8,5 +8,6 @@ ansible_host=127.0.0.1
 localhost ansible_connection=local
 
 [citus]
-centos-system-1 ansible_ssh_host=127.0.0.1 ansible_port=2222
-centos-system-2 ansible_ssh_host=127.0.0.1 ansible_port=2223
+centos-system-1 ansible_host=127.0.0.1 ansible_port=2222 citus_coordinator=True
+centos-system-2 ansible_host=127.0.0.1 ansible_port=2223 citus_coordinator=False
+centos-system-3 ansible_host=127.0.0.1 ansible_port=2224 citus_coordinator=False
