@@ -28,6 +28,7 @@
   roles:
     - facter
     - ansible-role-citus
+    - citus-test
 
   tags:
     - citus
