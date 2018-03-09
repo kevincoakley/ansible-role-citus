@@ -1,0 +1,20 @@
+---
+docker_containers:
+  - name: centos-system-1
+    image: kevincoakley/centos7-systemd
+    expose:
+      - "5432"
+    ports:
+      - "2222:22"
+      - "5432:5432"
+    volumes:
+      - "/sys/fs/cgroup:/sys/fs/cgroup"
+  - name: centos-system-2
+    image: kevincoakley/centos7-systemd
+    expose:
+      - "5433"
+    ports:
+      - "2223:22"
+      - "5433:5432"
+    volumes:
+      - "/sys/fs/cgroup:/sys/fs/cgroup"

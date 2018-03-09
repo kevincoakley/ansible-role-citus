@@ -1,2 +1,12 @@
-localhost
+[all:vars]
+ansible_connection=ssh
+ansible_user=root
+ansible_ssh_pass=docker
+ansible_host=127.0.0.1
 
+[local]
+localhost ansible_connection=local
+
+[citus]
+centos-system-1 ansible_ssh_host=127.0.0.1 ansible_port=2222
+centos-system-2 ansible_ssh_host=127.0.0.1 ansible_port=2223
