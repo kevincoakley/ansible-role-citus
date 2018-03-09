@@ -1,2 +1,127 @@
 ---
-# tasks file for ansible-role-citus
+- name: Install citus yum repository
+  yum_repository:
+    name: citusdata_community
+    state: present
+    baseurl: https://packagecloud.io/citusdata/community/el/7/$basearch
+    description: citusdata_community
+    #repo_gpgcheck: yes
+    repo_gpgcheck: no
+    gpgcheck: no
+    enabled: yes
+    gpgkey: https://packagecloud.io/citusdata/community/gpgkey
+    sslverify: yes
+    sslcacert: /etc/pki/tls/certs/ca-bundle.crt
+    metadata_expire: 300
+
+- name: Install postgresql 10 yum repository
+  package:
+    name: https://download.postgresql.org/pub/repos/yum/10/redhat/rhel-7-x86_64/pgdg-centos10-10-1.noarch.rpm
+    state: present
+
+- name: Install packages
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - postgresql10-server
+    - postgresql10
+    - citus72_10
+
+- name: Check if PG_VERSION exists
+  stat:
+    path: /var/lib/pgsql/10/data/PG_VERSION
+  register: pg_version
+
+- name: Initialize the system database
+  shell: /usr/pgsql-10/bin/postgresql-10-setup initdb
+  args:
+    executable: /bin/bash
+  when: pg_version.stat.exists == False
+
+- name: Configure the preload of the citus extension
+  lineinfile:
+    path: /var/lib/pgsql/10/data/postgresql.conf
+    regexp: "^shared_preload_libraries = 'citus'"
+    insertafter: '^# Add settings for extensions here'
+    line: "shared_preload_libraries = 'citus'"
+  notify: Restart postgresql
+
+- name: Configure postgresql to listen on all IP interfaces
+  lineinfile:
+    path: /var/lib/pgsql/10/data/postgresql.conf
+    regexp: "^listen_addresses = '*'"
+    insertafter: "^#listen_addresses = 'localhost'"
+    line: "listen_addresses = '*'"
+  notify: Restart postgresql
+
+- name: Configure the postgresql access permissions
+  blockinfile:
+    path: /var/lib/pgsql/10/data/pg_hba.conf
+    insertafter: EOF
+    block: |
+      # Allow unrestricted access to nodes in the local network. The following ranges
+      # correspond to 24, 20, and 16-bit blocks in Private IPv4 address spaces.
+      host    all             all             10.0.0.0/8              trust
+
+      # Also allow the host unrestricted access to connect to itself
+      host    all             all             127.0.0.1/32            trust
+      host    all             all             ::1/128                 trust
+  notify: Restart postgresql
+
+- name: Ensure postgresql service is started and enabled on boot
+  systemd:
+    name: postgresql-10
+    state: started
+    enabled: yes
+
+- name: Restart postgresql if needed
+  meta: flush_handlers
+
+- name: Get a list of postgresql extension
+  shell: psql -c "SELECT * FROM pg_extension;"
+  args:
+    executable: /bin/bash
+  register: postgresql_plugin_list
+  become: yes
+  become_user: postgres
+  become_method: sudo
+  changed_when: False
+
+- name: Enable the citus extension
+  shell: psql -c "CREATE EXTENSION citus;"
+  args:
+    executable: /bin/bash
+  register: enable_citus
+  become: yes
+  become_user: postgres
+  become_method: sudo
+  failed_when: '"CREATE EXTENSION" not in enable_citus.stdout'
+  changed_when: False
+  when: '"citus" not in postgresql_plugin_list.stdout'
+
+- name: Get a list of active citus worker nodes
+  shell: psql -c "SELECT * FROM master_get_active_worker_nodes();"
+  args:
+    executable: /bin/bash
+  register: citus_active_worker_nodes
+  become: yes
+  become_user: postgres
+  become_method: sudo
+  changed_when: False
+
+- name: Add the worker nodes to the citus coordinator
+  shell: "psql -c \"SELECT * from master_add_node('{{ hostvars[item][citus_node_variable] }}', 5432);\""
+  args:
+    executable: /bin/bash
+  register: citus_add_worker_node
+  become: yes
+  become_user: postgres
+  become_method: sudo
+  failed_when: 'hostvars[item][citus_node_variable] not in citus_add_worker_node.stdout'
+  changed_when: False
+  with_items: "{{ groups[citus_host_group] }}"
+  when:
+    - citus_coordinator
+    - hostvars[item]['citus_coordinator'] == False
+    - hostvars[item][citus_node_variable] not in citus_active_worker_nodes.stdout
