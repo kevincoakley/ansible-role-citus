@@ -26,7 +26,7 @@
   with_items:
     - postgresql10-server
     - postgresql10
-    - citus72_10
+    - "citus{{ citus_major_version | regex_replace('\\.') }}_10"
 
 - name: Check if PG_VERSION exists
   stat:
