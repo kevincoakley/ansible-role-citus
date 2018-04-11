@@ -125,3 +125,12 @@
     - citus_coordinator
     - hostvars[item]['citus_coordinator'] == False
     - hostvars[item][citus_node_variable] not in citus_active_worker_nodes.stdout
+
+- name: Custom Citus Configuration
+  lineinfile:
+    path: /var/lib/pgsql/10/data/postgresql.conf
+    regexp: "^{{ item['line'] }}"
+    line: "{{ item['line'] }}"
+    state: "{{ item['state'] | default(omit) }}"
+  with_items: "{{ citus_config }}"
+  notify: Restart postgresql

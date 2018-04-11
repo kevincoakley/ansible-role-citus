@@ -24,6 +24,10 @@
 
   vars:
     - citus_node_variable: facter_ipaddress
+    - citus_config:
+      - line: citus.enable_repartition_joins = true
+      - line: citus.enable_version_checks = false
+        state: absent
 
   roles:
     - facter
