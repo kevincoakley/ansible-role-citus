@@ -62,7 +62,7 @@
     block: |
       # Allow unrestricted access to nodes in the local network. The following ranges
       # correspond to 24, 20, and 16-bit blocks in Private IPv4 address spaces.
-      host    all             all             10.0.0.0/8              trust
+      host    all             all             {{ citus_trusted_subnet }}              trust
 
       # Also allow the host unrestricted access to connect to itself
       host    all             all             127.0.0.1/32            trust
