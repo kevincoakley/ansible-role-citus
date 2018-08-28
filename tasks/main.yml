@@ -39,12 +39,33 @@
     executable: /bin/bash
   when: pg_version.stat.exists == False
 
-- name: Configure the preload of the citus extension
+- name: Check if shared_preload_libraries already exists in postgresql.conf
+  shell: grep "^shared_preload_libraries" /var/lib/pgsql/10/data/postgresql.conf
+  args:
+    executable: /bin/bash
+  register: shared_preload_libraries_return
+  check_mode: no
+  ignore_errors: yes
+  changed_when: no
+
+- name: Add the shared_preload_libraries config for enabling the citus shared libraries (New Line)
   lineinfile:
     path: /var/lib/pgsql/10/data/postgresql.conf
-    regexp: "^shared_preload_libraries = 'citus'"
+    regexp: ^shared_preload_libraries =
     insertafter: '^# Add settings for extensions here'
-    line: "shared_preload_libraries = 'citus'"
+    line: shared_preload_libraries = 'citus'
+    backup: yes
+  when: shared_preload_libraries_return.rc == 1
+  notify: Restart postgresql
+
+- name: Update the shared_preload_libraries config for enabling the citus shared libraries (Existing Line)
+  lineinfile:
+    path: /var/lib/pgsql/10/data/postgresql.conf
+    regexp: ^((?=shared_preload_libraries)(?!.*citus).*\s*=\s*'.*)('.*)
+    line: \1, citus\2
+    backrefs: yes
+    backup: yes
+  when: shared_preload_libraries_return.rc == 0
   notify: Restart postgresql
 
 - name: Configure postgresql to listen on all IP interfaces
