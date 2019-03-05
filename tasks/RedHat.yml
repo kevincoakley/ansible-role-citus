@@ -1,0 +1,20 @@
+---
+- name: Install citus yum repository
+  yum_repository:
+    name: citusdata_community
+    state: present
+    baseurl: https://packagecloud.io/citusdata/community/el/7/$basearch
+    description: citusdata_community
+    #repo_gpgcheck: yes
+    repo_gpgcheck: no
+    gpgcheck: no
+    enabled: yes
+    gpgkey: https://packagecloud.io/citusdata/community/gpgkey
+    sslverify: yes
+    sslcacert: /etc/pki/tls/certs/ca-bundle.crt
+    metadata_expire: 300
+
+- name: Install postgresql 10 yum repository
+  package:
+    name: https://download.postgresql.org/pub/repos/yum/10/redhat/rhel-7-x86_64/pgdg-centos10-10-2.noarch.rpm
+    state: present

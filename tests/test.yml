@@ -18,12 +18,13 @@
 
 
 - name: Test the Citus role for CentOS
-  hosts: citus
+  hosts: citus-centos
   become: yes
   become_method: sudo
 
   vars:
-    - citus_node_variable: facter_ipaddress
+    - citus_host_group: citus-centos
+    - citus_node_variable: docker_ip
     - citus_config:
       - line: citus.enable_repartition_joins = true
       - line: citus.enable_version_checks = false
@@ -35,7 +36,29 @@
     - citus-test
 
   tags:
-    - citus
+    - citus-centos
+
+
+- name: Test the Citus role for Ubuntu
+  hosts: citus-ubuntu
+  become: yes
+  become_method: sudo
+
+  vars:
+    - citus_host_group: citus-ubuntu
+    - citus_node_variable: docker_ip
+    - citus_config:
+        - line: citus.enable_repartition_joins = true
+        - line: citus.enable_version_checks = false
+          state: absent
+
+  roles:
+    - facter
+    - ansible-role-citus
+    - citus-test
+
+  tags:
+    - citus-ubuntu
 
 
 - name: Stop the Docker containers

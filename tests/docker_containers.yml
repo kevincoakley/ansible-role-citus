@@ -18,3 +18,21 @@ docker_containers:
       - "2224:22"
     volumes:
       - "/sys/fs/cgroup:/sys/fs/cgroup"
+  - name: ubuntu-system-1
+    image: kevincoakley/ubuntu18.04-systemd
+    ports:
+      - "2200:22"
+    volumes:
+      - "/sys/fs/cgroup:/sys/fs/cgroup"
+  - name: ubuntu-system-2
+    image: kevincoakley/ubuntu18.04-systemd
+    ports:
+      - "2201:22"
+    volumes:
+      - "/sys/fs/cgroup:/sys/fs/cgroup"
+  - name: ubuntu-system-3
+    image: kevincoakley/ubuntu18.04-systemd
+    ports:
+      - "2202:22"
+    volumes:
+      - "/sys/fs/cgroup:/sys/fs/cgroup"

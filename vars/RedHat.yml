@@ -1,0 +1,9 @@
+---
+citus_packages:
+  - postgresql10-server
+  - postgresql10
+  - "citus{{ citus_major_version | regex_replace('\\.') }}_10"
+
+postgresql_service: postgresql-10
+postgresql_data_path: /var/lib/pgsql/10/data
+postgresql_conf_path: "{{ postgresql_data_path }}"
