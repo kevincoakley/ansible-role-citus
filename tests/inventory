@@ -7,7 +7,12 @@ ansible_host=127.0.0.1
 [local]
 localhost ansible_connection=local
 
-[citus]
-centos-system-1 ansible_host=127.0.0.1 ansible_port=2222 citus_coordinator=True
-centos-system-2 ansible_host=127.0.0.1 ansible_port=2223 citus_coordinator=False
-centos-system-3 ansible_host=127.0.0.1 ansible_port=2224 citus_coordinator=False
+[citus-centos]
+centos-system-1 ansible_host=127.0.0.1 ansible_port=2222 citus_coordinator=True docker_ip="{{ facter_ipaddress }}"
+centos-system-2 ansible_host=127.0.0.1 ansible_port=2223 citus_coordinator=False docker_ip="{{ facter_ipaddress }}"
+centos-system-3 ansible_host=127.0.0.1 ansible_port=2224 citus_coordinator=False docker_ip="{{ facter_ipaddress }}"
+
+[citus-ubuntu]
+ubuntu-system-1 ansible_host=127.0.0.1 ansible_port=2200 citus_coordinator=True docker_ip="{{ facter_networking.ip }}"
+ubuntu-system-2 ansible_host=127.0.0.1 ansible_port=2201 citus_coordinator=False docker_ip="{{ facter_networking.ip }}"
+ubuntu-system-3 ansible_host=127.0.0.1 ansible_port=2202 citus_coordinator=False docker_ip="{{ facter_networking.ip }}"

@@ -1,0 +1,17 @@
+---
+- name: Add an Apt signing key, uses whichever key is at the URL
+  apt_key:
+    url: "{{ item }}"
+    state: present
+  with_items:
+    - https://repos.citusdata.com/community/gpgkey
+    - https://www.postgresql.org/media/keys/ACCC4CF8.asc
+
+- name: Install apt repositories
+  apt_repository:
+    repo: "{{ item }}"
+    state: present
+    update_cache: yes
+  with_items:
+    - deb https://repos.citusdata.com/community/ubuntu/ {{ ansible_distribution_release }} main
+    - deb http://apt.postgresql.org/pub/repos/apt/ {{ ansible_distribution_release }}-pgdg main

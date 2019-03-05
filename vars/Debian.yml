@@ -1,0 +1,8 @@
+---
+citus_packages:
+  - postgresql-10
+  - "postgresql-10-citus-{{ citus_major_version }}"
+
+postgresql_service: postgresql
+postgresql_data_path: /var/lib/postgresql/10/main
+postgresql_conf_path: /etc/postgresql/10/main

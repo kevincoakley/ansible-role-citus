@@ -1,46 +1,30 @@
 ---
-- name: Install citus yum repository
-  yum_repository:
-    name: citusdata_community
-    state: present
-    baseurl: https://packagecloud.io/citusdata/community/el/7/$basearch
-    description: citusdata_community
-    #repo_gpgcheck: yes
-    repo_gpgcheck: no
-    gpgcheck: no
-    enabled: yes
-    gpgkey: https://packagecloud.io/citusdata/community/gpgkey
-    sslverify: yes
-    sslcacert: /etc/pki/tls/certs/ca-bundle.crt
-    metadata_expire: 300
+- name: Include OS family specific variables
+  include_vars: "{{ ansible_os_family }}.yml"
 
-- name: Install postgresql 10 yum repository
-  package:
-    name: https://download.postgresql.org/pub/repos/yum/10/redhat/rhel-7-x86_64/pgdg-centos10-10-2.noarch.rpm
-    state: present
+- name: Include OS specific tasks
+  include_tasks: "{{ ansible_os_family }}.yml"
 
 - name: Install packages
   package:
     name: "{{ item }}"
     state: present
-  with_items:
-    - postgresql10-server
-    - postgresql10
-    - "citus{{ citus_major_version | regex_replace('\\.') }}_10"
+  with_items: "{{ citus_packages }}"
 
 - name: Check if PG_VERSION exists
   stat:
-    path: /var/lib/pgsql/10/data/PG_VERSION
+    path: "{{ postgresql_data_path }}/PG_VERSION"
   register: pg_version
 
 - name: Initialize the system database
   shell: /usr/pgsql-10/bin/postgresql-10-setup initdb
   args:
     executable: /bin/bash
-  when: pg_version.stat.exists == False
+  when: not pg_version.stat.exists
 
 - name: Check if shared_preload_libraries already exists in postgresql.conf
-  shell: grep "^shared_preload_libraries" /var/lib/pgsql/10/data/postgresql.conf
+  shell: >
+    grep "^shared_preload_libraries" {{ postgresql_conf_path }}/postgresql.conf
   args:
     executable: /bin/bash
   register: shared_preload_libraries_return
@@ -50,7 +34,7 @@
 
 - name: Add the shared_preload_libraries config for enabling the citus shared libraries (New Line)
   lineinfile:
-    path: /var/lib/pgsql/10/data/postgresql.conf
+    path: "{{ postgresql_conf_path }}/postgresql.conf"
     regexp: ^shared_preload_libraries =
     insertafter: '^# Add settings for extensions here'
     line: shared_preload_libraries = 'citus'
@@ -60,7 +44,7 @@
 
 - name: Update the shared_preload_libraries config for enabling the citus shared libraries (Existing Line)
   lineinfile:
-    path: /var/lib/pgsql/10/data/postgresql.conf
+    path: "{{ postgresql_conf_path }}/postgresql.conf"
     regexp: ^((?=shared_preload_libraries)(?!.*citus).*\s*=\s*'.*)('.*)
     line: \1, citus\2
     backrefs: yes
@@ -70,7 +54,7 @@
 
 - name: Configure postgresql to listen on all IP interfaces
   lineinfile:
-    path: /var/lib/pgsql/10/data/postgresql.conf
+    path: "{{ postgresql_conf_path }}/postgresql.conf"
     regexp: "^listen_addresses = '*'"
     insertafter: "^#listen_addresses = 'localhost'"
     line: "listen_addresses = '*'"
@@ -78,7 +62,7 @@
 
 - name: Configure the postgresql access permissions
   blockinfile:
-    path: /var/lib/pgsql/10/data/pg_hba.conf
+    path: "{{ postgresql_conf_path }}/pg_hba.conf"
     insertafter: EOF
     block: |
       # Allow unrestricted access to nodes in the local network. The following ranges
@@ -92,7 +76,7 @@
 
 - name: Ensure postgresql service is started and enabled on boot
   systemd:
-    name: postgresql-10
+    name: "{{ postgresql_service }}"
     state: started
     enabled: yes
 
@@ -144,12 +128,12 @@
   with_items: "{{ groups[citus_host_group] }}"
   when:
     - citus_coordinator
-    - hostvars[item]['citus_coordinator'] == False
+    - not hostvars[item]['citus_coordinator']
     - hostvars[item][citus_node_variable] not in citus_active_worker_nodes.stdout
 
 - name: Custom Citus Configuration
   lineinfile:
-    path: /var/lib/pgsql/10/data/postgresql.conf
+    path: "{{ postgresql_conf_path }}/postgresql.conf"
     regexp: "^{{ item['line'] }}"
     line: "{{ item['line'] }}"
     state: "{{ item['state'] | default(omit) }}"
