@@ -1,5 +1,5 @@
 ---
-citus_major_version: 7.5
+citus_major_version: 8.1
 citus_host_group: citus
 citus_coordinator: False
 citus_node_variable: ansible_host
