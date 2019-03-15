@@ -18,3 +18,10 @@
   package:
     name: https://download.postgresql.org/pub/repos/yum/10/redhat/rhel-7-x86_64/pgdg-centos10-10-2.noarch.rpm
     state: present
+  when: citus_major_version|string is match("^7\.[0-9][0-9.]*")
+
+- name: Install postgresql 11 yum repository
+  package:
+    name: https://download.postgresql.org/pub/repos/yum/11/redhat/rhel-7-x86_64/pgdg-centos11-11-2.noarch.rpm
+    state: present
+  when: citus_major_version|string is match("^8\.[0-9][0-9.]*")
