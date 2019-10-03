@@ -1,0 +1,30 @@
+---
+- name: Converge
+  hosts: all
+  become: true
+
+  vars:
+    - citus_node_variable: facter_ipaddress
+    - citus_config:
+        - line: citus.enable_repartition_joins = true
+        - line: citus.enable_version_checks = false
+          state: absent
+
+  roles:
+    - role: ansible-role-citus
+
+  post_tasks:
+    - name: Test get a list of active citus worker nodes
+      shell: psql -c "SELECT * FROM master_get_active_worker_nodes();"
+      args:
+        executable: /bin/bash
+      register: test_citus_active_worker_nodes
+      become: true
+      become_user: postgres
+      become_method: sudo
+      failed_when: 'hostvars[item][citus_node_variable] not in test_citus_active_worker_nodes.stdout'
+      changed_when: false
+      with_items: "{{ groups[citus_host_group] }}"
+      when:
+        - citus_coordinator
+        - not hostvars[item]['citus_coordinator']
