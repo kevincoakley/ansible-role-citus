@@ -1,7 +1,7 @@
 ---
 citus_major_version: 8.1
 citus_host_group: citus
-citus_coordinator: False
+citus_coordinator: false
 citus_node_variable: ansible_host
 # Allow unrestricted access to nodes in the local network.
 citus_trusted_subnet: 10.0.0.0/8
