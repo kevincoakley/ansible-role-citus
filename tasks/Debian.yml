@@ -11,7 +11,7 @@
   apt_repository:
     repo: "{{ item }}"
     state: present
-    update_cache: yes
+    update_cache: true
   with_items:
     - deb https://repos.citusdata.com/community/ubuntu/ {{ ansible_distribution_release }} main
     - deb http://apt.postgresql.org/pub/repos/apt/ {{ ansible_distribution_release }}-pgdg main

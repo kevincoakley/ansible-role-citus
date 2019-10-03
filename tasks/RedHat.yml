@@ -5,12 +5,11 @@
     state: present
     baseurl: https://packagecloud.io/citusdata/community/el/7/$basearch
     description: citusdata_community
-    #repo_gpgcheck: yes
-    repo_gpgcheck: no
-    gpgcheck: no
-    enabled: yes
+    repo_gpgcheck: false
+    gpgcheck: false
+    enabled: true
     gpgkey: https://packagecloud.io/citusdata/community/gpgkey
-    sslverify: yes
+    sslverify: true
     sslcacert: /etc/pki/tls/certs/ca-bundle.crt
     metadata_expire: 300
 

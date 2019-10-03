@@ -33,9 +33,9 @@
   args:
     executable: /bin/bash
   register: shared_preload_libraries_return
-  check_mode: no
-  ignore_errors: yes
-  changed_when: no
+  check_mode: false
+  ignore_errors: true
+  changed_when: false
 
 - name: Add the shared_preload_libraries config for enabling the citus shared libraries (New Line)
   lineinfile:
@@ -43,7 +43,7 @@
     regexp: ^shared_preload_libraries =
     insertafter: '^# Add settings for extensions here'
     line: shared_preload_libraries = 'citus'
-    backup: yes
+    backup: true
   when: shared_preload_libraries_return.rc == 1
   notify: Restart postgresql
 
@@ -52,8 +52,8 @@
     path: "{{ postgresql_conf_path }}/postgresql.conf"
     regexp: ^((?=shared_preload_libraries)(?!.*citus).*\s*=\s*'.*)('.*)
     line: \1, citus\2
-    backrefs: yes
-    backup: yes
+    backrefs: true
+    backup: true
   when: shared_preload_libraries_return.rc == 0
   notify: Restart postgresql
 
@@ -83,7 +83,7 @@
   systemd:
     name: "{{ postgresql_service }}"
     state: started
-    enabled: yes
+    enabled: true
 
 - name: Restart postgresql if needed
   meta: flush_handlers
@@ -93,21 +93,21 @@
   args:
     executable: /bin/bash
   register: postgresql_plugin_list
-  become: yes
+  become: true
   become_user: postgres
   become_method: sudo
-  changed_when: False
+  changed_when: false
 
 - name: Enable the citus extension
   shell: psql -c "CREATE EXTENSION citus;"
   args:
     executable: /bin/bash
   register: enable_citus
-  become: yes
+  become: true
   become_user: postgres
   become_method: sudo
   failed_when: '"CREATE EXTENSION" not in enable_citus.stdout'
-  changed_when: False
+  changed_when: false
   when: '"citus" not in postgresql_plugin_list.stdout'
 
 - name: Get a list of active citus worker nodes
@@ -115,21 +115,21 @@
   args:
     executable: /bin/bash
   register: citus_active_worker_nodes
-  become: yes
+  become: true
   become_user: postgres
   become_method: sudo
-  changed_when: False
+  changed_when: false
 
 - name: Add the worker nodes to the citus coordinator
   shell: "psql -c \"SELECT * from master_add_node('{{ hostvars[item][citus_node_variable] }}', 5432);\""
   args:
     executable: /bin/bash
   register: citus_add_worker_node
-  become: yes
+  become: true
   become_user: postgres
   become_method: sudo
   failed_when: 'hostvars[item][citus_node_variable] not in citus_add_worker_node.stdout'
-  changed_when: False
+  changed_when: false
   with_items: "{{ groups[citus_host_group] }}"
   when:
     - citus_coordinator
