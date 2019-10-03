@@ -3,7 +3,7 @@ ansible-role-citus
 
 [![Build Status](https://travis-ci.org/kevincoakley/ansible-role-citus.svg?branch=master)](https://travis-ci.org/kevincoakley/ansible-role-citus)
 
-Install Postgresql Citus Community Edition (single machine and clustered) - https://www.citusdata.com/ . Tested with Citus 8.1 on CentOS 7 and Ubuntu 18.04.
+Install Postgresql Citus Community Edition (single machine and clustered) - https://www.citusdata.com/ . Tested with Citus 8.3 on CentOS 7 and Ubuntu 18.04.
 
 Requirements
 ------------
